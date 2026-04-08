@@ -1,6 +1,8 @@
-# AI/ML Engineer Assessment 2 — Multi-Agent Bug Triage
+# AI-ML-Engineer_Krish_Monga_April2026-assignment2-
 
-**Candidate:** *(replace with your name for submission filename)*  
+## AI/ML Engineer Assessment 2 — Multi-Agent Bug Triage
+
+**Candidate:** Krish Monga  
 **Company:** Purple Merit Technologies  
 **Track:** Assessment 2 — bug report + logs → repro → root cause → patch plan  
 
