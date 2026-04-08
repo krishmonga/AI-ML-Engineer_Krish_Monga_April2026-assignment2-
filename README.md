@@ -136,22 +136,3 @@ cd mini_repo && PYTHONPATH=src python -m pytest tests/ ../output/repro_generated
 | `output/investigation_report.json` / `.yaml` | Structured final report (same content in both formats). |
 
 ---
-
-## Demo video (per brief)
-
-Record a **silent** screen capture showing:
-
-1. Running `python -m bug_fix_swarm` (or with `--write-patch`).
-2. The **failing pytest** output for the generated repro.
-3. Opening `output/investigation_report.json` or `.yaml` after generation.
-
----
-
-## Submission checklist
-
-- [ ] Rename / fork GitHub repo per instructions: `AI/ ML Engineer_[Your_Name]_April2026` (as specified in the PDF).
-- [ ] README (this file) + working code + input artifacts.
-- [ ] Demo video link or file per email instructions.
-- [ ] No secrets in the repository.
-
-Good luck with the next interview stage.

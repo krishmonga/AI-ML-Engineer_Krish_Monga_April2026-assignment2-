@@ -1,0 +1,11 @@
+--- a/mini_repo/src/bug_fix/rolling.py
++++ b/mini_repo/src/bug_fix/rolling.py
+@@ -19,8 +19,6 @@ class RollingMetrics:
+         if n <= 0:
+             return 0.0
+         if len(self._buf) < n:
+-            # Defect: drops the freshest sample when the buffer is still "warming up".
+-            # Correct behavior: return sum(self._buf)
+-            return sum(self._buf[:-1])
++            return sum(self._buf)
+         return sum(self._buf[-n:])

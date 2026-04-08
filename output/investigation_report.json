@@ -1,0 +1,56 @@
+{
+  "bug_summary": {
+    "symptoms": "After deploying **bug_fix** `v2.3.0-canary`, the **15-minute rolling tile** on the executive dashboard reads **~20–37% below** the sum of per-minute ingest values shown in the raw drill-down table. The discrepancy **disappears** once enough minutes have accumulated (after the window is full). Finance noticed first because the tile feeds a reconciliation export.",
+    "scope": "bug_fix dashboard rolling aggregate API + bug_fix library",
+    "severity": "P1"
+  },
+  "evidence": {
+    "log_excerpts": [
+      "  File \"/usr/local/lib/python3.11/site-packages/bug_fix/rolling.py\", line 24, in last_n_sum",
+      "2026-04-07T14:02:14.901Z DEBUG bug_fix-api req_id=b02 lib=\"bug_fix.rolling\" detail=\"RollingMetrics.last_n_sum n=5 buflen=3\"",
+      "2026-04-07T14:02:14.882Z ERROR bug_fix-api req_id=b02 method=GET path=/metrics/window minutes=15 status=200 body_total=30.0 expected_total=47.5 delta=-17.5 msg=\"reconciliation guard tripped (soft)\"",
+      "2026-04-07T14:03:22.551Z ERROR bug_fix-api req_id=d44 method=GET path=/metrics/window minutes=15 status=200 body_total=37.5 expected_total=47.5 delta=-10.0",
+      "2026-04-07T14:03:45.003Z INFO  bug_fix-api req_id=e55 method=GET path=/metrics/window minutes=15 status=200 body_total=47.5 expected_total=47.5 delta=0.0 msg=\"window full; guard quiet\""
+    ],
+    "stack_trace_blocks": [
+      "Traceback (most recent call last):\n  File \"/app/services/bug_fix_api/routes/metrics.py\", line 88, in window_aggregate\n    total = state.rolling.last_n_sum(window)\n  File \"/usr/local/lib/python3.11/site-packages/bug_fix/rolling.py\", line 24, in last_n_sum\n    return sum(self._buf[:-1])\nValueError: aggregate guard: partial-window total out of tolerance vs raw series",
+      "Traceback (most recent call last):\n  File \"/app/workers/janitor.py\", line 41, in sweep_temp\n    shutil.rmtree(tmp, ignore_errors=False)\nPermissionError: [Errno 13] Permission denied: '/var/tmp/bug_fix_shadow'"
+    ],
+    "ripgrep_context_tail": "Ignored janitor PermissionError and billing webhook warnings as unrelated temporal noise; prioritized frames touching bug_fix.rolling. Ripgrep excerpt:\n"
+  },
+  "repro_steps": [
+    "Generated artifact: /home/krish/assignment 2/output/repro_generated_warm_window.py",
+    "Run: python -m pytest /home/krish/assignment 2/output/repro_generated_warm_window.py -q --tb=short",
+    "Expected before fix: failing assertion on warm-window total (47.5 vs actual)."
+  ],
+  "repro_artifact_path": "/home/krish/assignment 2/output/repro_generated_warm_window.py",
+  "root_cause_hypothesis": "In last_n_sum, the branch for len(self._buf) < n uses sum(self._buf[:-1]), which drops the newest sample during buffer warm-up. The contract requires summing all buffered samples when fewer than n exist.",
+  "hypothesis_confidence": 0.86,
+  "patch_plan": {
+    "files_modules_impacted": [
+      "/home/krish/assignment 2/mini_repo/src/bug_fix/rolling.py"
+    ],
+    "approach": "Replace partial-buffer return with sum(self._buf). Add regression test for warm-up window (already embodied by the generated repro). Optionally add property test: for all n >= len(buf), last_n_sum(n) == sum(buf).",
+    "risks": [
+      "If any caller relied on the buggy omission (unlikely), changing semantics could alter dashboards briefly.",
+      "Large buffers: sum() is O(k); acceptable for stated capacities."
+    ],
+    "optional_unified_diff_hint": "In last_n_sum partial branch, replace sum(self._buf[:-1]) with sum(self._buf)."
+  },
+  "validation_plan": {
+    "tests_to_add": [
+      "Property: for len(buf)<n, last_n_sum(n)==sum(buf).",
+      "Regression: repro test merged into mini_repo/tests."
+    ],
+    "regression_checks": [
+      "Run pytest on mini_repo/tests and the generated repro (expect pass after fix).",
+      "Manual: simulate cold start, query window endpoint before buffer fills, compare to raw list sum.",
+      "Add edge case tests: n==0, n==1, single push with large n."
+    ]
+  },
+  "open_questions": [
+    "Confirm which traceback corresponds to prod vs shadow pods in logs.",
+    "Confirm canary vs stable log streams share identical bug_fix wheel hash.",
+    "Verify finance export uses same code path as dashboard tile."
+  ]
+}
