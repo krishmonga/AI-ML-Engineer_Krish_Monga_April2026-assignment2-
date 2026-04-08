@@ -1,0 +1,24 @@
+2026-04-07T14:00:01.002Z INFO  bug_fix-ingest worker=7 msg="canary rollout 12% complete"
+2026-04-07T14:00:02.118Z WARN  bug_fix-ingest dep="requests" msg="urllib3 InsecureRequestWarning suppressed in prod"
+2026-04-07T14:01:03.441Z INFO  bug_fix-api req_id=a91 method=GET path=/health status=200 latency_ms=3
+2026-04-07T14:02:14.882Z ERROR bug_fix-api req_id=b02 method=GET path=/metrics/window minutes=15 status=200 body_total=30.0 expected_total=47.5 delta=-17.5 msg="reconciliation guard tripped (soft)"
+2026-04-07T14:02:14.901Z DEBUG bug_fix-api req_id=b02 lib="bug_fix.rolling" detail="RollingMetrics.last_n_sum n=5 buflen=3"
+2026-04-07T14:02:15.010Z INFO  bug_fix-api req_id=c77 method=GET path=/metrics/minutes limit=15 status=200 note="raw list sum matches operator spreadsheet"
+2026-04-07T14:03:00.004Z WARN  bug_fix-ingest worker=2 msg="retrying redis MGET: ConnectionTimeout (transient)" attempt=1/5
+2026-04-07T14:03:00.210Z INFO  bug_fix-ingest worker=2 msg="redis MGET recovered"
+2026-04-07T14:03:22.551Z ERROR bug_fix-api req_id=d44 method=GET path=/metrics/window minutes=15 status=200 body_total=37.5 expected_total=47.5 delta=-10.0
+Traceback (most recent call last):
+  File "/app/services/bug_fix_api/routes/metrics.py", line 88, in window_aggregate
+    total = state.rolling.last_n_sum(window)
+  File "/usr/local/lib/python3.11/site-packages/bug_fix/rolling.py", line 24, in last_n_sum
+    return sum(self._buf[:-1])
+ValueError: aggregate guard: partial-window total out of tolerance vs raw series
+2026-04-07T14:04:00.100Z WARN  janitor worker=3 msg="PermissionError sweeping /var/tmp/bug_fix_shadow — unrelated"
+Traceback (most recent call last):
+  File "/app/workers/janitor.py", line 41, in sweep_temp
+    shutil.rmtree(tmp, ignore_errors=False)
+PermissionError: [Errno 13] Permission denied: '/var/tmp/bug_fix_shadow'
+2026-04-07T14:03:45.003Z INFO  bug_fix-api req_id=e55 method=GET path=/metrics/window minutes=15 status=200 body_total=47.5 expected_total=47.5 delta=0.0 msg="window full; guard quiet"
+2026-04-07T14:04:01.771Z WARN  billing-sidecar msg="Stripe webhook signature clock skew 1.2s — within tolerance"
+2026-04-07T14:05:11.332Z ERROR bug_fix-api req_id=f90 method=GET path=/v2/legacy/import status=410 msg="deprecated endpoint — noise"
+2026-04-07T14:06:00.000Z INFO  cron msg="nightly vacuum OK"
