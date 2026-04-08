@@ -29,7 +29,7 @@ This repository implements **Option A (recommended): mini-repo + bug report + lo
 | `inputs/RELEASE_NOTES.md` | Known issues / deploy context. |
 | `mini_repo/` | Small Python package (`bug_fix`) with an intentional defect in `RollingMetrics.last_n_sum`. |
 | `bug_fix_swarm/` | Orchestrator, agents, tools, CLI. |
-| `output/` | **Generated** — repro test, `investigation_report.{json,yaml}`, `evidence_ledger.jsonl`, optional `proposed_fix.patch`. |
+| `output/` | **Generated** — repro test, **`investigation_report.json`** + **`investigation_report.yaml`**, **`evidence_ledger.jsonl`** (stream) + **`evidence_ledger.json`** + **`evidence_ledger.yaml`** (full ledger), optional `proposed_fix.patch`. |
 
 ---
 
@@ -101,9 +101,9 @@ python -m bug_fix_swarm \
 
 - Console: Rich-formatted trace of phases, tool usage, and **pytest failing** on the generated repro (proving the defect).
 - Files:
-  - `output/investigation_report.json` and `.yaml` — structured final output.
+  - `output/investigation_report.json` **and** `investigation_report.yaml` — same final report in both formats.
   - `output/repro_generated_warm_window.py` — minimal failing test.
-  - `output/evidence_ledger.jsonl` — machine-readable trace.
+  - `output/evidence_ledger.jsonl` — one JSON object per line (live trace); **`evidence_ledger.json`** and **`evidence_ledger.yaml`** — full ledger as a list in both formats.
 
 ---
 
@@ -131,9 +131,27 @@ cd mini_repo && PYTHONPATH=src python -m pytest tests/ ../output/repro_generated
 | Artifact | What it contains |
 |----------|------------------|
 | Terminal | Phase rules, hypothesis list, pytest output, path to JSON/YAML. |
-| `output/evidence_ledger.jsonl` | One JSON object per line: `ts`, `phase`, `agent`, `action`, `tool`, `payload`. |
-| `output/investigation_report.yaml` | Human-readable rollup aligned with the assessment rubric. |
+| `output/evidence_ledger.jsonl` | One JSON object per line (append-only during the run). |
+| `output/evidence_ledger.json` / `.yaml` | Same entries as a single array/document (easier to open in editors). |
+| `output/investigation_report.json` / `.yaml` | Structured final report (same content in both formats). |
 
+---
 
+## Demo video (per brief)
 
+Record a **silent** screen capture showing:
 
+1. Running `python -m bug_fix_swarm` (or with `--write-patch`).
+2. The **failing pytest** output for the generated repro.
+3. Opening `output/investigation_report.json` or `.yaml` after generation.
+
+---
+
+## Submission checklist
+
+- [ ] Rename / fork GitHub repo per instructions: `AI/ ML Engineer_[Your_Name]_April2026` (as specified in the PDF).
+- [ ] README (this file) + working code + input artifacts.
+- [ ] Demo video link or file per email instructions.
+- [ ] No secrets in the repository.
+
+Good luck with the next interview stage.

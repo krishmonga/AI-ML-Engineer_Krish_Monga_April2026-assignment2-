@@ -17,6 +17,13 @@ from bug_fix_swarm.agents.triage import run_triage
 from bug_fix_swarm.ledger import EvidenceLedger
 from bug_fix_swarm.schemas import FinalReport, model_to_dict
 
+_YAML_DUMP_KW = {
+    "sort_keys": False,
+    "allow_unicode": True,
+    "default_flow_style": False,
+    "width": 120,
+}
+
 
 class SwarmOrchestrator:
     """
@@ -45,6 +52,9 @@ class SwarmOrchestrator:
 
     def run(self, *, write_patch: bool = False) -> FinalReport:
         c = self.console
+        self.out_dir.mkdir(parents=True, exist_ok=True)
+        self.ledger.reset()
+
         c.print(Panel.fit("[bold]bug_fix_swarm[/] — Assessment 2 pipeline", style="cyan"))
 
         c.rule("[1] Triage Agent")
@@ -166,17 +176,22 @@ class SwarmOrchestrator:
             payload=model_to_dict(report),
         )
 
-        self.out_dir.mkdir(parents=True, exist_ok=True)
         json_path = self.out_dir / "investigation_report.json"
         yaml_path = self.out_dir / "investigation_report.yaml"
         rd = model_to_dict(report)
-        json_path.write_text(json.dumps(rd, indent=2), encoding="utf-8")
-        yaml_path.write_text(yaml.safe_dump(rd, sort_keys=False, allow_unicode=True), encoding="utf-8")
+        json_path.write_text(json.dumps(rd, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        yaml_path.write_text(yaml.safe_dump(rd, **_YAML_DUMP_KW), encoding="utf-8")
+
+        ledger_json, ledger_yaml = self.ledger.export_json_and_yaml(self.out_dir)
 
         c.rule("[bold green]Structured outputs written")
-        c.print(f"  JSON: {json_path}")
-        c.print(f"  YAML: {yaml_path}")
-        c.print(f"  Ledger: {self.ledger.path}")
+        c.print("  Investigation report:")
+        c.print(f"    JSON:  {json_path}")
+        c.print(f"    YAML:  {yaml_path}")
+        c.print("  Evidence ledger:")
+        c.print(f"    JSONL: {self.ledger.path}  (append-only trace)")
+        c.print(f"    JSON:  {ledger_json}  (full array)")
+        c.print(f"    YAML:  {ledger_yaml}")
 
         tbl = Table(title="Handoff summary")
         tbl.add_column("Agent")
